@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tense-Tastic Comic Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;500;600;700&family=Bangers&display=swap" rel="stylesheet">
+    <style>
+        /* === COMIC BOOK / POP ART REBUILD === */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fde047; /* Bright Yellow */
+            background-image: radial-gradient(#facc15 2px, transparent 2px); /* Halftone dots */
+            background-size: 20px 20px;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Bangers', cursive;
+            letter-spacing: 2px;
+            color: #1f2937; /* Dark gray */
+        }
+        .text-body {
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        /* === COMIC "PANEL" Style === */
+        .comic-panel {
+            @apply bg-white p-6 rounded-xl overflow-hidden;
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px rgba(0,0,0,1);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* === COMIC "BUTTON" Style (Primary) === */
+        .comic-btn {
+            @apply font-semibold py-3 px-6 rounded-lg text-lg text-white cursor-pointer;
+            font-family: 'Fredoka One', cursive;
+            border: 4px solid #000;
+            box-shadow: 5px 5px 0px rgba(0,0,0,1);
+            transition: all 0.15s ease-in-out;
+        }
+        .comic-btn:hover {
+            box-shadow: 2px 2px 0px rgba(0,0,0,1);
+            transform: translate(3px, 3px);
+        }
+        .comic-btn:active, .comic-btn.disabled:active {
+            box-shadow: 0px 0px 0px rgba(0,0,0,1);
+            transform: translate(5px, 5px);
+        }
+        .comic-btn.disabled {
+            @apply opacity-50 bg-gray-500 cursor-not-allowed;
+            box-shadow: 5px 5px 0px rgba(0,0,0,1);
+            transform: none;
+        }
+        
+        /* === COMIC "BUTTON" Style (Secondary / Outlined) === */
+        .comic-btn-outlined {
+            @apply font-semibold py-3 px-6 rounded-lg text-lg text-gray-900 bg-white cursor-pointer;
+            font-family: 'Fredoka One', cursive;
+            border: 4px solid #000;
+            box-shadow: 5px 5px 0px rgba(0,0,0,1);
+            transition: all 0.15s ease-in-out;
+        }
+        .comic-btn-outlined:hover {
+            box-shadow: 2px 2px 0px rgba(0,0,0,1);
+            transform: translate(3px, 3px);
+            @apply bg-gray-100;
+        }
+         .comic-btn-outlined:active {
+            box-shadow: 0px 0px 0px rgba(0,0,0,1);
+            transform: translate(5px, 5px);
+        }
+        
+        /* Button Colors */
+        .btn-blue { @apply bg-blue-600 hover:bg-blue-700; }
+        .btn-green { @apply bg-emerald-600 hover:bg-emerald-700; }
+        .btn-red { @apply bg-red-600 hover:bg-red-700; }
+        .btn-purple { @apply bg-purple-600 hover:bg-purple-700; }
+        .btn-yellow { @apply bg-yellow-400 text-gray-900 hover:bg-yellow-500; }
+
+        /* === COMIC "TEXT INPUT" Style === */
+        .comic-input {
+            @apply w-full p-4 text-2xl text-body;
+            border: 4px solid #000;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .comic-input:focus {
+            outline: none;
+            box-shadow: 4px 4px 0px #4f46e5; /* Indigo shadow */
+        }
+        
+        /* === Scoreboard Style === */
+        .comic-scoreboard {
+            @apply p-4 rounded-lg;
+            border: 4px solid #000;
+        }
+
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: flex;
+        }
+        
+        /* === FIX: Special class for the result overlay === */
+        #screen-result {
+            display: none; /* Hidden by default */
+        }
+        #screen-result.active {
+            display: flex; /* Shown when active */
+        }
+
+
+        /* Slide animations */
+        .slide-content {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Flip card animation */
+        .flip-card { perspective: 1000px; }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.is-flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            @apply rounded-xl p-4 flex flex-col items-center justify-center;
+             border: 4px solid #000;
+             box-shadow: 5px 5px 0px rgba(0,0,0,1);
+        }
+        .flip-card-front { @apply bg-blue-200 text-blue-800; }
+        .flip-card-back { 
+            @apply bg-emerald-200 text-emerald-800;
+            transform: rotateY(180deg); /* <<< FIX */
+        }
+
+        
+        /* Dice animation */
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(0.8); }
+            25% { transform: rotate(180deg) scale(1.2); }
+            50% { transform: rotate(360deg) scale(1); }
+            75% { transform: rotate(540deg) scale(1.2); }
+            100% { transform: rotate(720deg) scale(1); }
+        }
+        .rolling {
+            animation: roll 1s ease-in-out;
+        }
+
+        /* COMIC Toast/Snackbar Style (FOR ERRORS ONLY NOW) */
+        .toast-snackbar {
+            @apply fixed bottom-10 left-1/2 -translate-x-1/2 p-4 text-white text-xl z-50 rounded-lg;
+            font-family: 'Fredoka One', cursive;
+            border: 4px solid #000;
+            box-shadow: 5px 5px 0px rgba(0,0,0,1);
+            animation: toast-in 0.5s ease, toast-out 0.5s ease 2.5s;
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(20px) translateX(-50%); }
+            to { opacity: 1; transform: translateY(0) translateX(-50%); }
+        }
+        @keyframes toast-out {
+            from { opacity: 1; transform: translateY(0) translateX(-50%); }
+            to { opacity: 0; transform: translateY(20px) translateX(-50%); }
+        }
+        
+        /* Simple Player List Item */
+        .player-item {
+             @apply flex justify-between items-center bg-gray-100 p-2 rounded-lg;
+             border: 2px solid #000;
+        }
+        
+        /* === HUGE BUZZER BUTTON === */
+        .comic-buzzer {
+            @apply font-semibold py-10 px-6 rounded-full text-5xl text-white cursor-pointer;
+            font-family: 'Bangers', cursive;
+            letter-spacing: 4px;
+            background-color: #e11d48; /* Red-600 */
+            border: 8px solid #000;
+            box-shadow: 10px 10px 0px rgba(0,0,0,1);
+            transition: all 0.1s ease-in-out;
+            animation: pulse 1s infinite;
+        }
+        .comic-buzzer:hover {
+            background-color: #f43f5e; /* Red-500 */
+            box-shadow: 6px 6px 0px rgba(0,0,0,1);
+            transform: translate(4px, 4px);
+        }
+        .comic-buzzer:active {
+            box-shadow: 0px 0px 0px rgba(0,0,0,1);
+            transform: translate(10px, 10px);
+            animation: none;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        /* === NEW ANIMATIONS === */
+        .anim-pop-in {
+            animation: pop-in 0.3s ease-out;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .anim-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
+        
+        .anim-pop-score {
+            animation: pop-score 0.4s ease-out;
+        }
+        @keyframes pop-score {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25) rotate(-5deg); color: #f59e0b; }
+            100% { transform: scale(1); }
+        }
+        
+        /* === SFX Button === */
+        #sfx-control {
+            @apply fixed top-4 right-4 z-50 comic-btn-outlined text-3xl px-4 py-2;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* === NEW Countdown Timer Style === */
+        /* BUG FIX: Made fonts much larger */
+        .countdown-timer {
+            font-size: 10rem; /* 160px */
+            line-height: 1;
+            @apply font-bold text-center;
+            font-family: 'Bangers', cursive;
+            color: #4f46e5; /* Indigo */
+            -webkit-text-stroke: 4px black;
+            text-shadow: 6px 6px 0px white;
+            animation: countdown-pop 1s infinite;
+        }
+        
+        .countdown-timer-small {
+            font-size: 8rem; /* 128px */
+            line-height: 1;
+            @apply font-bold text-center;
+            font-family: 'Bangers', cursive;
+            color: #e11d48; /* Red */
+            -webkit-text-stroke: 3px black;
+            text-shadow: 4px 4px 0px white;
+        }
+        
+        @keyframes countdown-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* === NEW "Frosted Glass" Modal Overlay === */
+        #screen-result {
+            /* This is the overlay. Now it's a light "frosted glass" effect */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- === SFX Control === -->
+    <button id="sfx-control" onclick="sfx.toggleMute()" type="button">
+        🔈
+    </button>
+
+    <!-- === Main Container === -->
+    <div class="w-full max-w-5xl mx-auto">
+
+        <!-- === Screen: Home === -->
+        <div id="screen-home" class="screen active flex-col items-center justify-center text-center p-4">
+            <h1 class="text-7xl md:text-9xl text-blue-600 mb-4" style="text-shadow: 4px 4px 0px white, 8px 8px 0px black;">
+                TENSE-TASTIC!
+            </h1>
+            <!-- TASK 1: Change Subtitle -->
+            <h2 class="text-5xl text-gray-800 mb-16">
+                Present Simple - Present Continuous - Stative Verbs
+            </h2>
+
+            <!-- NEW POP-ART Layout -->
+            <div class="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-10">
+                <a onclick="sfx.init(); sfx.play('click'); showScreen('screen-learn', 0);" class="comic-panel p-10 transform -rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300 cursor-pointer bg-blue-400 text-white">
+                    <h2 class="text-7xl text-white" style="text-shadow: 4px 4px 0px black;">LEARN!</h2>
+                    <p class="text-body text-xl text-blue-100">Learn the grammar rules!</p>
+                </a>
+                <a onclick="sfx.init(); sfx.play('click'); showScreen('screen-game-select');" class="comic-panel p-10 transform rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300 cursor-pointer bg-red-500 text-white">
+                    <h2 class="text-7xl text-white" style="text-shadow: 4px 4px 0px black;">PLAY!</h2>
+                    <p class="text-body text-xl text-red-100">Practice what you learned!</p>
+                </a>
+            </div>
+        </div>
+        
+        <!-- === Screen: Game Select === -->
+        <div id="screen-game-select" class="screen flex-col items-center justify-center text-center p-4">
+            <h1 class="text-7xl text-purple-600 mb-10" style="text-shadow: 3px 3px 0px white, 6px 6px 0px black;">Choose Your Game!</h1>
+            
+            <!-- NEW Comic "Cover" Card Options -->
+            <div class="w-full max-w-4xl space-y-8">
+                <a onclick="sfx.play('click'); showScreen('screen-team-game-1-setup')" class="comic-panel flex items-center p-6 gap-6 cursor-pointer hover:bg-gray-50 transform hover:-translate-y-1">
+                    <h2 class="text-6xl text-emerald-600">🤝</h2>
+                    <div>
+                        <h3 class="text-4xl text-left text-emerald-600">Game 1: Tense Tussle</h3>
+                        <p class="text-body text-lg text-left text-gray-600">Team vs. Team - Fill in the Gaps!</p>
+                    </div>
+                </a>
+                
+                 <a onclick="sfx.play('click'); showScreen('screen-team-game-2-setup')" class="comic-panel flex items-center p-6 gap-6 cursor-pointer hover:bg-gray-50 transform hover:-translate-y-1">
+                    <h2 class="text-6xl text-purple-600">🚀</h2>
+                    <div>
+                        <h3 class="text-4xl text-left text-purple-600">Game 2: Galaxy Gamble</h3>
+                        <p class="text-body text-lg text-left text-gray-600">Team vs. Team - Roll the Dice!</p>
+                    </div>
+                </a>
+
+                <a onclick="sfx.play('click'); showScreen('screen-indiv-game-setup')" class="comic-panel flex items-center p-6 gap-6 cursor-pointer hover:bg-gray-50 transform hover:-translate-y-1">
+                    <h2 class="text-6xl text-blue-600">⚡️</h2>
+                    <div>
+                        <h3 class="text-4xl text-left text-blue-600">Game 3: Buzzer Beater!</h3>
+                        <p class="text-body text-lg text-left text-gray-600">Individual Leaderboard - Fastest Finger First!</p>
+                    </div>
+                </a>
+            </div>
+
+            <button onclick="sfx.play('click'); showScreen('screen-home')" class="mt-12 text-lg comic-btn-outlined" type="button">
+                🏠 Back to Home
+            </button>
+        </div>
+
+        <!-- === Screen: Learning Zone === -->
+        <div id="screen-learn" class="screen flex-col items-center">
+            <div class="w-full max-w-4xl">
+                <h1 class="text-7xl text-blue-600 text-center mb-6" style="text-shadow: 3px 3px 0px white, 6px 6px 0px black;">Learning Zone!</h1>
+                
+                <!-- Comic Panel -->
+                <div id="slide-container" class="comic-panel">
+                    <!-- Slides will be injected here by JS -->
+                </div>
+                
+                <!-- Navigation -->
+                <div class="flex justify-between items-center mt-6">
+                    <button id="prev-slide-btn" onclick="sfx.play('click'); changeSlide(-1)" class="comic-btn-outlined text-xl" type="button">
+                        &larr; Previous
+                    </button>
+                    <div id="slide-dots" class="flex space-x-2">
+                        <!-- Dots will be injected here by JS -->
+                    </div>
+                    <button id="next-slide-btn" onclick="sfx.play('click'); changeSlide(1)" class="comic-btn btn-blue text-xl" type="button">
+                        Next &rarr;
+                    </button>
+                </div>
+                
+                <!-- Exit to Game Select -->
+                <div class="text-center mt-8">
+                    <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="comic-btn btn-green text-2xl" type="button">
+                        I'm ready to play! 🏆
+                    </button>
+                    <button onclick="sfx.play('click'); showScreen('screen-home')" class="block mx-auto mt-4 comic-btn-outlined text-lg" type="button">
+                        🏠 Back to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- === Screen: Team Game 1 (Tense Tussle) Setup === -->
+        <div id="screen-team-game-1-setup" class="screen flex-col items-center justify-center comic-panel max-w-2xl mx-auto">
+            <!-- BUG FIX: Add form with onsubmit to prevent page reload -->
+            <form class="w-full" onsubmit="event.preventDefault(); return false;">
+                <h1 class="text-6xl text-emerald-600 mb-8 text-center">Tense Tussle Setup</h1>
+                
+                <!-- NEW Setup Layout -->
+                <div class="w-full text-body space-y-6">
+                    <!-- Team 1 Block -->
+                    <div class="comic-panel bg-red-100">
+                        <label for="team1-name" class="text-3xl font-bold text-red-600" style="font-family: 'Fredoka One', cursive;">Team 1 Name:</label>
+                        <input type="text" id="team1-name" class="comic-input mt-2" value="Red Rockets">
+                    </div>
+                    
+                    <!-- Team 2 Block -->
+                    <div class="comic-panel bg-blue-100">
+                        <label for="team2-name" class="text-3xl font-bold text-blue-600" style="font-family: 'Fredoka One', cursive;">Team 2 Name:</label>
+                        <input type="text" id="team2-name" class="comic-input mt-2" value="Blue Bombers">
+                    </div>
+                </div>
+                
+                <button onclick="sfx.play('click'); startTeamGame()" class="w-full mt-8 text-3xl comic-btn btn-green" type="button">
+                    Start Game!
+                </button>
+                <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="mt-4 w-full text-center text-lg comic-btn-outlined" type="button">
+                    &larr; Back to Game Select
+                </button>
+            </form>
+        </div>
+        
+        <!-- === Screen: Team Game 1 (Tense Tussle) === -->
+        <div id="screen-team-game-1" class="screen flex-col items-center w-full">
+            <!-- Comic Scoreboard -->
+            <div class="w-full max-w-4xl flex justify-between mb-6 space-x-4">
+                <div class="flex-1 text-center comic-scoreboard bg-red-200">
+                    <h2 id="team1-score-name" class="text-4xl text-red-700">Red Rockets</h2>
+                    <p id="team1-score" class="text-6xl font-bold text-red-600" style="font-family: 'Fredoka One', cursive;">0</p>
+                </div>
+                <div class="flex-1 text-center comic-scoreboard bg-blue-200">
+                    <h2 id="team2-score-name" class="text-4xl text-blue-700">Blue Bombers</h2>
+                    <p id="team2-score" class="text-6xl font-bold text-blue-600" style="font-family: 'Fredoka One', cursive;">0</p>
+                </div>
+            </div>
+            
+            <!-- TASK 7: Round Indicator -->
+            <div class="w-full max-w-4xl text-center mb-4">
+                <h3 class="text-4xl font-bold text-gray-700" id="team-game-1-round-text"></h3>
+            </div>
+            
+            <!-- Turn Indicator -->
+            <div id="team-turn-indicator" class="w-full max-w-4xl text-center mb-6">
+                <h3 class="text-5xl font-bold p-4 rounded-xl transition-all duration-300" id="team-turn-text"></h3>
+            </div>
+            
+            <!-- Game Area -->
+            <div class="w-full max-w-4xl comic-panel">
+                <div id="team-question-container">
+                    <p class="text-3xl text-gray-700 font-semibold leading-relaxed mb-4 text-body" id="team-question-text"></p>
+                    <input type="text" id="team-answer-input" class="comic-input" placeholder="Type the verb...">
+                    <button onclick="checkTeamAnswer()" class="w-full mt-6 text-3xl comic-btn btn-blue" type="button">
+                        Check Answer
+                    </button>
+                </div>
+                
+                <div id="team-game-over" class="hidden text-center">
+                    <h2 class="text-7xl text-yellow-500 mb-6">GAME OVER!</h2>
+                    <h3 id="team-winner-text" class="text-6xl font-bold mb-10" style="font-family: 'Fredoka One', cursive;"></h3>
+                    <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="w-full text-3xl comic-btn btn-purple" type="button">
+                        Play Another Game
+                    </button>
+                     <button onclick="sfx.play('click'); showScreen('screen-home')" class="mt-4 w-full text-center text-lg comic-btn-outlined" type="button">
+                        🏠 Back to Home
+                    </button>
+                </div>
+            </div>
+            <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="mt-8 text-lg comic-btn-outlined" type="button">
+                &larr; Back to Game Select
+            </button>
+        </div>
+        
+        <!-- === Screen: Team Game 2 (Galaxy Gamble) Setup === -->
+        <div id="screen-team-game-2-setup" class="screen flex-col items-center justify-center comic-panel max-w-2xl mx-auto">
+            <!-- BUG FIX: Add form with onsubmit to prevent page reload -->
+            <form class="w-full" onsubmit="event.preventDefault(); return false;">
+                <h1 class="text-6xl text-purple-600 mb-8 text-center">Galaxy Gamble Setup</h1>
+                <!-- RE-USED Tense Tussle Setup Layout -->
+                <div class="w-full text-body space-y-6">
+                    <div class="comic-panel bg-cyan-100">
+                        <label for="teamA-name" class="text-3xl font-bold text-cyan-600" style="font-family: 'Fredoka One', cursive;">Team A Name:</label>
+                        <input type="text" id="teamA-name" class="comic-input mt-2" value="Cosmic Comets">
+                    </div>
+                    <div class="comic-panel bg-orange-100">
+                        <label for="teamB-name" class="text-3xl font-bold text-orange-600" style="font-family: 'Fredoka One', cursive;">Team B Name:</label>
+                        <input type="text" id="teamB-name" class="comic-input mt-2" value="Space Invaders">
+                    </div>
+                </div>
+                <button onclick="sfx.play('click'); startTeamGame2()" class="w-full mt-8 text-3xl comic-btn btn-green" type="button">
+                    Start Game!
+                </button>
+                <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="mt-4 w-full text-center text-lg comic-btn-outlined" type="button">
+                    &larr; Back to Game Select
+                </button>
+            </form>
+        </div>
+
+        <!-- === Screen: Team Game 2 (Galaxy Gamble) === -->
+        <div id="screen-team-game-2" class="screen flex-col items-center w-full">
+            <!-- Comic Scoreboard -->
+            <div class="w-full max-w-4xl flex justify-between mb-6 space-x-4">
+                <div class="flex-1 text-center comic-scoreboard bg-cyan-200">
+                    <h2 id="teamA-score-name" class="text-4xl text-cyan-700">Cosmic Comets</h2>
+                    <p id="teamA-score" class="text-6xl font-bold text-cyan-600" style="font-family: 'Fredoka One', cursive;">0</p>
+                </div>
+                <div class="flex-1 text-center comic-scoreboard bg-orange-200">
+                    <h2 id="teamB-score-name" class="text-4xl text-orange-700">Space Invaders</h2>
+                    <p id="teamB-score" class="text-6xl font-bold text-orange-600" style="font-family: 'Fredoka One', cursive;">0</p>
+                </div>
+            </div>
+            
+            <!-- TASK 3: Round Indicator -->
+            <div class="w-full max-w-4xl text-center mb-4">
+                <h3 class="text-4xl font-bold text-gray-700" id="team-game-2-round-text"></h3>
+            </div>
+            
+            <!-- Turn Indicator -->
+            <div id="team-turn-indicator-2" class="w-full max-w-4xl text-center mb-6">
+                <h3 class="text-5xl font-bold p-4 rounded-xl transition-all duration-300" id="team-turn-text-2"></h3>
+            </div>
+            
+            <!-- Game Area -->
+            <div class="w-full max-w-4xl comic-panel">
+                <div id="team-question-container-2">
+                    <p class="text-3xl text-gray-700 font-semibold leading-relaxed mb-4 text-body" id="team-question-text-2"></p>
+                    <div id="team-options-container-2" class="space-y-3 mb-4"></div>
+                    <input type="text" id="team-answer-input-2" class="comic-input" placeholder="Type the answer...">
+                    <button onclick="checkTeamAnswer2()" class="w-full mt-6 text-3xl comic-btn btn-blue" type="button">
+                        Check Answer
+                    </button>
+                </div>
+
+                <!-- Dice Roll Modal -->
+                <div id="dice-modal" class="hidden flex-col items-center justify-center text-center">
+                    <h2 id="dice-modal-text" class="text-5xl font-bold mb-6">Correct! Roll the dice!</h2>
+                    <div id="dice-face" class="w-48 h-48 bg-white rounded-xl flex items-center justify-center text-8xl font-bold mb-6 border-4 border-black shadow-[6px_6px_0_black]">
+                        🎲
+                    </div>
+                    <button id="roll-dice-btn" onclick="performDiceRoll()" class="w-full text-3xl comic-btn btn-yellow" type="button">
+                        Roll Dice!
+                    </button>
+                </div>
+                
+                <div id="team-game-over-2" class="hidden text-center">
+                    <h2 class="text-7xl text-yellow-500 mb-6">GAME OVER!</h2>
+                    <h3 id="team-winner-text-2" class="text-6xl font-bold mb-10" style="font-family: 'Fredoka One', cursive;"></h3>
+                    <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="w-full text-3xl comic-btn btn-purple" type="button">
+                        Play Another Game
+                    </button>
+                     <button onclick="sfx.play('click'); showScreen('screen-home')" class="mt-4 w-full text-center text-lg comic-btn-outlined" type="button">
+                        🏠 Back to Home
+                    </button>
+                </div>
+            </div>
+             <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="mt-8 text-lg comic-btn-outlined" type="button">
+                &larr; Back to Game Select
+            </button>
+        </div>
+
+        <!-- === Screen: Individual Game (Buzzer Beater) Setup === -->
+        <div id="screen-indiv-game-setup" class="screen flex-col items-center justify-center comic-panel max-w-2xl mx-auto">
+            <!-- BUG FIX: Add form with onsubmit to prevent page reload -->
+            <form class="w-full" onsubmit="event.preventDefault(); return false;">
+                <h1 class="text-6xl text-blue-600 mb-8 text-center">Buzzer Beater!</h1>
+                <div class="w-full text-body">
+                    <label for="player-name-input" class="text-xl font-semibold text-gray-700">Add Player Name:</label>
+                    <div class="flex mt-2 mb-4 space-x-2">
+                        <input type="text" id="player-name-input" class="comic-input flex-grow" placeholder="Enter student's name...">
+                        <button onclick="sfx.play('click'); addPlayer()" class="comic-btn btn-blue text-xl" type="button">Add</button>
+                    </div>
+                    
+                    <h3 class="text-4xl text-gray-700 mt-6 mb-2">Players (12 max):</h3>
+                    <div id="player-list" class="grid grid-cols-2 gap-2 bg-gray-100 p-3 rounded-lg min-h-[100px] border-2 border-black">
+                        <!-- Player names go here -->
+                    </div>
+                </div>
+                <button onclick="sfx.play('click'); startIndividualGame()" class="w-full mt-8 text-3xl comic-btn btn-green disabled:opacity-50" id="start-indiv-game-btn" disabled type="button">
+                    Start Game! (Need 1+ players)
+                </button>
+                <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="mt-4 w-full text-center text-lg comic-btn-outlined" type="button">
+                    &larr; Back to Game Select
+                </button>
+            </form>
+        </div>
+        
+        <!-- === Screen: Individual Game (Buzzer Beater) === -->
+        <div id="screen-indiv-game" class="screen flex-col items-center w-full">
+            <div class="w-full max-w-4xl">
+                <!-- Turn Indicator -->
+                <div class="w-full text-center mb-6">
+                    <h3 class="text-6xl font-bold text-blue-600" id="indiv-round-text"></h3>
+                </div>
+                
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- Game Area -->
+                    <div class="flex-grow comic-panel">
+                        <!-- Question Text (Always visible during round) -->
+                        <p class="text-3xl text-gray-700 font-semibold leading-relaxed mb-4 text-body" id="indiv-question-text"></p>
+                        
+                        <!-- NEW Buzzer Countdown (REMOVED) -->
+                        
+                        <div id="buzzer-countdown-area" class="my-6 text-center hidden">
+                            <h2 class="text-6xl text-center mb-4">GET READY!</h2>
+                            <div id="buzzer-countdown-timer" class="countdown-timer">5</div>
+                        </div>
+                        
+                        
+                        <!-- Buzzer Area -->
+                        <div id="buzzer-area" class="my-6 text-center hidden">
+                            <button id="buzz-in-btn" onclick="onBuzzIn()" class="comic-buzzer" type="button">
+                                BUZZ IN!
+                            </button>
+                        </div>
+                        
+                        <!-- Who Buzzed Area -->
+                        <div id="who-buzzed-area" class="my-6 hidden">
+                            <h2 class="text-4xl text-center mb-4">Who Buzzed In?</h2>
+                            <div id="who-buzzed-list" class="grid grid-cols-2 gap-3">
+                                <!-- Player buttons go here -->
+                            </div>
+                        </div>
+
+                        <!-- Answer Area (Shown after player select) -->
+                        <div id="indiv-answer-container" class="hidden">
+                            <!-- NEW Answer Countdown Timer -->
+                            <div id="answer-countdown-timer" class="countdown-timer-small mb-4">10</div>
+                            
+                            <div id="indiv-answer-area" class="mb-6"></div>
+                            <button id="check-indiv-answer-btn" onclick="checkIndivAnswer()" class="w-full text-3xl comic-btn btn-blue" type="button">
+                                Check Answer
+                            </button>
+                        </div>
+                        
+                        <!-- Game Over Area -->
+                        <div id="indiv-game-over" class="hidden text-center">
+                            <h2 class="text-7xl text-yellow-500 mb-6">RACE FINISHED!</h2>
+                            <h3 id="indiv-winner-text" class="text-6xl font-bold mb-10" style="font-family: 'Fredoka One', cursive;"></h3>
+                            <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="w-full text-3xl comic-btn btn-purple" type="button">
+                                Play Another Game
+                            </button>
+                            <button onclick="sfx.play('click'); showScreen('screen-home')" class="mt-4 w-full text-center text-lg comic-btn-outlined" type="button">
+                                🏠 Back to Home
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Leaderboard (Comic Panel) -->
+                    <div class="w-full md:w-80 flex-shrink-0 comic-panel bg-blue-100">
+                        <h2 class="text-5xl text-blue-800 text-center mb-4">🏆 Leaderboard</h2>
+                        <div id="leaderboard" class="space-y-2">
+                            <!-- Leaderboard items go here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <button onclick="sfx.play('click'); showScreen('screen-game-select')" class="mt-8 text-lg comic-btn-outlined" type="button">
+                &larr; Back to Game Select
+            </button>
+        </div>
+
+        <!-- === Screen: Result Modal (FIXED) === -->
+        <div id="screen-result" class="screen fixed inset-0 z-50 flex-col items-center justify-center p-4">
+            <!-- The panel itself will have the pop-in animation -->
+            <div class="comic-panel max-w-lg w-full text-center" id="result-panel">
+                <h1 id="result-title" class="text-7xl mb-4"></h1> <!-- Color set by JS -->
+                <p id="result-text" class="text-body text-3xl font-semibold text-gray-700 mb-8"></p>
+                <button id="result-continue-btn" class="comic-btn btn-green text-3xl w-full" type="button">
+                    Continue
+                </button>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- === Global Message Toasts (FOR ERRORS ONLY) === -->
+    <div id="message-toast" class="toast-snackbar hidden">
+    </div>
+
+    <script>
+        // === NEW SOUND MANAGER ===
+        const sfx = {
+            audioCtx: null,
+            isMuted: false,
+            
+            // Call this on the *first* user click (e.g., "PLAY" button)
+            init() {
+                if (this.audioCtx) return; // Already initialized
+                try {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn("Web Audio API is not supported in this browser.");
+                }
+            },
+            
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                document.getElementById('sfx-control').innerText = this.isMuted ? '🔇' : '🔈';
+            },
+            
+            play(type) {
+                if (!this.audioCtx || this.isMuted) return;
+                
+                const oscillator = this.audioCtx.createOscillator();
+                const gainNode = this.audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioCtx.destination);
+                
+                let freq = 440;
+                let duration = 0.1;
+                let waveType = 'sine';
+                let gain = 0.2;
+                
+                switch(type) {
+                    case 'click':
+                        freq = 880;
+                        duration = 0.05;
+                        break;
+                    case 'countdown': // NEW
+                        freq = 600;
+                        duration = 0.05;
+                        gain = 0.1;
+                        break;
+                    case 'correct':
+                        freq = 600;
+                        duration = 0.1;
+                        gain = 0.5;
+                        oscillator.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                        oscillator.frequency.linearRampToValueAtTime(1200, this.audioCtx.currentTime + duration);
+                        gainNode.gain.setValueAtTime(gain, this.audioCtx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+                        break;
+                    case 'wrong':
+                        freq = 400;
+                        duration = 0.2;
+                        waveType = 'sawtooth';
+                        gain = 0.3;
+                        oscillator.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                        oscillator.frequency.linearRampToValueAtTime(200, this.audioCtx.currentTime + duration);
+                        gainNode.gain.setValueAtTime(gain, this.audioCtx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+                        break;
+                    case 'buzz': // This is the FINAL buzz sound
+                        freq = 300;
+                        duration = 0.5;
+                        waveType = 'sawtooth';
+                        gain = 0.4;
+                        gainNode.gain.setValueAtTime(gain, this.audioCtx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+                        break;
+                    case 'dice':
+                        freq = 300;
+                        duration = 0.3;
+                        waveType = 'triangle';
+                        gain = 0.5;
+                        gainNode.gain.setValueAtTime(gain, this.audioCtx.currentTime);
+                        oscillator.frequency.setValueAtTime(1000, this.audioCtx.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(200, this.audioCtx.currentTime + duration);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+                        break;
+                }
+                
+                if (type !== 'correct' && type !== 'wrong' && type !== 'dice' && type !== 'buzz') {
+                    oscillator.type = waveType;
+                    oscillator.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(gain, this.audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+                }
+                
+                oscillator.type = waveType;
+                oscillator.start(this.audioCtx.currentTime);
+                oscillator.stop(this.audioCtx.currentTime + duration);
+            }
+        };
+
+        // === STATE MANAGEMENT ===
+        let currentScreen = 'screen-home';
+        let currentSlide = 0;
+        let nextGameFunction = () => {}; // Global function to advance game state
+        
+        // --- Learning Slides Content ---
+        function renderSlide() {
+            // ... (same as before)
+            const container = document.getElementById('slide-container');
+            const slide = slides[currentSlide];
+            
+            // NEW Comic book layout
+            container.innerHTML = `
+                <h2 class="text-5xl text-gray-800 text-center mb-6">${slide.title}</h2>
+                <div class="slide-content text-left text-body text-lg space-y-4">
+                    ${slide.content}
+                </div>
+            `;
+            
+            // Update dots
+            const dotsContainer = document.getElementById('slide-dots');
+            dotsContainer.innerHTML = '';
+            slides.forEach((_, index) => {
+                const dot = document.createElement('span');
+                dot.classList.add('w-4', 'h-4', 'rounded-full', 'cursor-pointer', 'block', 'transition-all', 'border-2', 'border-black');
+                dot.classList.toggle('bg-blue-600', index === currentSlide);
+                dot.classList.toggle('bg-white', index !== currentSlide);
+                dot.onclick = () => {
+                    sfx.play('click');
+                    currentSlide = index;
+                    renderSlide();
+                };
+                dotsContainer.appendChild(dot);
+            });
+            
+            // Update nav buttons
+            document.getElementById('prev-slide-btn').style.visibility = (currentSlide === 0) ? 'hidden' : 'visible';
+            document.getElementById('next-slide-btn').style.visibility = (currentSlide === slides.length - 1) ? 'hidden' : 'visible';
+        }
+        
+        const slides = [
+            // Slide 1: Present Simple
+            {
+                title: "1. Present Simple 🏃",
+                content: `
+                    <p class="text-xl mb-4">We use Present Simple for things that are <strong>always true</strong> or happen <strong>all the time</strong>.</p>
+                    
+                    <div class="p-4 bg-blue-100 border-4 border-black rounded-lg -rotate-1">
+                        <strong class="text-2xl font-bold text-blue-600" style="font-family: 'Fredoka One', cursive;">🌍 Facts:</strong>
+                        <p class="text-lg">The Earth <strong>goes</strong> around the sun.</p>
+                    </div>
+                    
+                    <div class="p-4 bg-green-100 border-4 border-black rounded-lg rotate-1">
+                        <strong class="text-2xl font-bold text-green-700" style="font-family: 'Fredoka One', cursive;">⏰ Habits:</strong>
+                        <p class="text-lg">I <strong>brush</strong> my teeth every day.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-gray-100 border-4 border-black rounded-lg">
+                            <strong class="text-xl font-bold text-gray-700" style="font-family: 'Fredoka One', cursive;">🏠 Permanent:</strong>
+                            <p>He <strong>lives</strong> in London.</p>
+                        </div>
+                        <div class="p-4 bg-gray-100 border-4 border-black rounded-lg">
+                            <strong class="text-xl font-bold text-gray-700" style="font-family: 'Fredoka One', cursive;">🗓️ Schedules:</strong>
+                            <p>The train <strong>leaves</strong> at 8:00 AM.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-yellow-100 rounded-lg border-4 border-black">
+                        <h4 class="text-3xl text-yellow-700 mb-2">🕒 Time Expressions:</h4>
+                        <p class="text-lg font-medium text-gray-900">
+                            every day/week, always, usually, often, sometimes, never, on Mondays, at the weekend
+                        </p>
+                    </div>
+                `
+            },
+            // Slide 2: Present Simple (Negative/Question)
+            {
+                title: "2. Present Simple: +/-/? ❓",
+                content: `
+                    <p class="text-xl mb-4">We use <strong>DO / DOES</strong> to make negatives and questions.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
+                        <!-- Positive -->
+                        <div class="p-4 bg-green-100 rounded-lg border-4 border-black">
+                            <h4 class="text-4xl text-green-700 mb-2">(+) Positive</h4>
+                            <p>I / You / We / They <strong>like</strong> cats.</p>
+                            <p>He / She / It <strong>likes</strong> cats.</p>
+                        </div>
+                        <!-- Negative -->
+                        <div class="p-4 bg-red-100 rounded-lg border-4 border-black">
+                            <h4 class="text-4xl text-red-700 mb-2">(-) Negative</h4>
+                            <p>I / You / We / They <strong>do not (don't) like</strong> cats.</p>
+                            <p>He / She / It <strong>does not (doesn't) like</strong> cats.</p>
+                        </div>
+                        <!-- Question -->
+                        <div class="p-4 bg-yellow-100 rounded-lg border-4 border-black col-span-1 md:col-span-2">
+                            <h4 class="text-4xl text-yellow-700 mb-2">(?) Question</h4>
+                            <p><strong>Do</strong> I / you / we / they <strong>like</strong> cats?</p>
+                            <p><strong>Does</strong> he / she / it <strong>like</strong> cats?</p>
+                        </div>
+                    </div>
+                    <p class="text-center text-3xl mt-4 text-blue-600" style="font-family: 'Bangers', cursive; text-shadow: 2px 2px 0 white, 4px 4px 0 black;">Remember the 'S'!</p>
+                `
+            },
+            // Slide 3: Present Continuous
+            {
+                title: "3. Present Continuous 📱",
+                content: `
+                    <p class="text-xl mb-4">We use Present Continuous (<strong>am/is/are + verb-ing</strong>) for things happening <strong>now</strong> or <strong>around now</strong>.</p>
+                    
+                    <div class="p-4 bg-purple-100 border-4 border-black rounded-lg rotate-1">
+                        <strong class="text-2xl font-bold text-purple-600" style="font-family: 'Fredoka One', cursive;">👀 Actions Now:</strong>
+                        <p class="text-lg">You <strong>are reading</strong> this sentence.</p>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-100 border-4 border-black rounded-lg -rotate-1">
+                        <strong class="text-2xl font-bold text-gray-700" style="font-family: 'Fredoka One', cursive;">🗓️ Future Plans (fixed):</strong>
+                        <p class="text-lg">I <strong>am meeting</strong> John tonight.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-gray-100 border-4 border-black rounded-lg">
+                            <strong class="text-xl font-bold text-gray-700" style="font-family: 'Fredoka One', cursive;">⏳ Temporary:</strong>
+                            <p>She <strong>is staying</strong> with her aunt.</p>
+                        </div>
+                        <div class="p-4 bg-red-100 border-4 border-black rounded-lg">
+                            <strong class="text-xl font-bold text-red-700" style="font-family: 'Fredoka One', cursive;">😠 Annoying Habits:</strong>
+                            <p>He <strong>is always losing</strong> his keys!</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-yellow-100 rounded-lg border-4 border-black">
+                        <h4 class="text-3xl text-yellow-700 mb-2">🕒 Time Expressions:</h4>
+                        <p class="text-lg font-medium text-gray-900">
+                            now, right now, at the moment, today, this week, tonight, tomorrow
+                        </p>
+                    </div>
+                `
+            },
+            // Slide 4: Present Continuous (Negative/Question)
+            {
+                title: "4. Present Continuous: +/-/? ❓",
+                content: `
+                    <p class="text-xl mb-4">We just move the verb <strong>'to be'</strong> (am/is/are).</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
+                        <!-- Positive -->
+                        <div class="p-4 bg-green-100 rounded-lg border-4 border-black">
+                            <h4 class="text-4xl text-green-700 mb-2">(+) Positive</h4>
+                            <p>I <strong>am watching</strong> TV.</p>
+                            <p>He / She / It <strong>is watching</strong> TV.</p>
+                            <p>We / You / They <strong>are watching</strong> TV.</p>
+                        </div>
+                        <!-- Negative -->
+                        <div class="p-4 bg-red-100 rounded-lg border-4 border-black">
+                            <h4 class="text-4xl text-red-700 mb-2">(-) Negative</h4>
+                            <p>I Dstrong>am not</strong> watching TV.</p>
+                            <p>He / She / It <strong>is not (isn't)</strong> watching TV.</p>
+                            <p>We / You / They <strong>are not (aren't)</strong> watching TV.</p>
+                        </div>
+                        <!-- Question -->
+                        <div class="p-4 bg-yellow-100 rounded-lg border-4 border-black col-span-1 md:col-span-2">
+                            <h4 class="text-4xl text-yellow-700 mb-2">(?) Question</h4>
+                            <p><strong>Am</strong> I watching TV?</p>
+                            <p><strong>Is</strong> he / she / it watching TV?</p>
+                            <p><strong>Are</strong> we / you / they watching TV?</p>
+                        </div>
+                    </div>
+                `
+            },
+            // Slide 5: Stative Verbs
+            {
+                title: "5. Stative Verbs 🧠",
+                content: `
+                    <p class="text-xl mb-4">Stative Verbs describe <strong>states</strong> (feelings, thoughts, senses). We <strong>DO NOT</strong> use them in Present Continuous.</p>
+                    
+                    <div class="p-4 bg-red-100 border-4 border-black rounded-lg">
+                        <p class="text-xl text-center font-semibold">We say: "I <strong class="text-green-600">like</strong> pizza." <br> NOT: "I <s class="text-red-600">am liking</s> pizza."</p>
+                    </div>
+                    
+                    <h3 class="text-4xl text-blue-600 mt-6 mb-2">Types of States:</h3>
+                    <ul class="space-y-3 text-lg columns-2">
+                        <li>🧠 <strong class="text-indigo-600">Thoughts:</strong> know, believe, understand</li>
+                        <li>❤️ <strong class="text-indigo-600">Feelings:</strong> like, love, hate, want, need</li>
+                        <li>👁️ <strong class="text-indigo-600">Senses:</strong> see, hear, smell, taste, seem</li>
+                        <li>📦 <strong class="text-indigo-600">Possession:</strong> have, own, belong</li>
+                    </ul>
+                `
+            },
+            // Slide 6: Dual-Meaning Verbs (Expanded)
+            {
+                title: "6. Special Stative Verbs! 🧠/👁️",
+                content: `
+                    <p class="text-xl mb-4 text-center">Here's the secret! <strong>It's all about "seeing" the action!</strong></p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
+                        <div class="p-4 bg-blue-100 rounded-lg border-4 border-black">
+                            <h4 class="text-3xl text-blue-700 mb-2">🧠 STATE (Stative)</h4>
+                            <p>You <strong>CAN'T see</strong> the action. It's a thought, feeling, or state.</p>
+                            <p class="font-bold mt-2">Example: "I <strong>think</strong> he is nice."<br>(You can't see the 'thinking'.)</p>
+                        </div>
+                        <div class="p-4 bg-purple-100 rounded-lg border-4 border-black">
+                            <h4 class="text-3xl text-purple-700 mb-2">👁️ ACTION (Dynamic)</h4>
+                            <p>You <strong>CAN see</strong> the action. Someone is 'doing' something.</p>
+                            <p class="font-bold mt-2">Example: "I <strong>am thinking</strong> hard."<br>(You can see a person focusing.)</p>
+                        </div>
+                    </div>
+
+                    <p class="text-3xl text-center my-4 text-red-600">Click the 8 cards below!</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <!-- THINK -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">THINK</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Opinion):</strong> "I <strong>think</strong> this is easy."</p>
+                                    <p>👁️ <strong>Action (Process):</strong> "I <strong>am thinking</strong>!"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- HAVE -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">HAVE</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Possess):</strong> "She <strong>has</strong> a car."</p>
+                                    <p>👁️ <strong>Action (Experience):</strong> "She <strong>is having</strong> breakfast."</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SEE -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">SEE</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Eyes):</strong> "I <strong>see</strong> the bird."</p>
+                                    <p>👁️ <strong>Action (Meeting):</strong> "I <strong>am seeing</strong> the doctor."</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- TASTE -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">TASTE</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Quality):</strong> "The soup <strong>tastes</strong> good."</p>
+                                    <p>👁️ <strong>Action (Testing):</strong> "The chef <strong>is tasting</strong> the soup."</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SMELL -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">SMELL</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Quality):</strong> "The flower <strong>smells</strong> nice."</p>
+                                    <p>👁️ <strong>Action (Sniffing):</strong> "He <strong>is smelling</strong> the flower."</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- FEEL -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">FEEL</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Opinion):</strong> "I <strong>feel</strong> you are right."</p>
+                                    <p>👁️ <strong>Action (Touching):</strong> "She <strong>is feeling</strong> the cat's fur."</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- BE -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">BE</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Characteristic):</strong> "He <strong>is</strong> tall." (Permanent)</p>
+                                    <p>👁️ <strong>Action (Behaviour):</strong> "He <strong>is being</strong> naughty." (Temporary)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- LOOK -->
+                        <div class="flip-card h-40" onclick="sfx.play('click'); this.classList.toggle('is-flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front"><h3 class="text-4xl">LOOK</h3></div>
+                                <div class="flip-card-back text-sm">
+                                    <p>🧠 <strong>State (Seem):</strong> "She <strong>looks</strong> tired."</p>
+                                    <p>👁️ <strong>Action (Watching):</strong> "She <strong>is looking</strong> at the painting."</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // --- Team Game 1 (Tense Tussle) ---
+        let team1Name = "Red Rockets";
+        let team2Name = "Blue Bombers";
+        let team1Score = 0;
+        let team2Score = 0;
+        let currentTeam = 1; // 1 or 2
+        let teamGame1Questions = [];
+        let teamGame1CurrentQ = 0;
+        
+        const teamGame1AllQuestions = [
+            { s: "He often ___ (go) to the park.", a: "goes" },
+            { s: "Listen! The baby ___ (cry).", a: "is crying" },
+            { s: "I ___ (not / like) spicy food.", a: "don't like" },
+            { s: "___ (you / watch) TV at the moment?", a: "Are you watching" },
+            { s: "The sun ___ (rise) in the east.", a: "rises" },
+            { s: "We ___ (have) dinner at 7:00 PM every day.", a: "have" },
+            { s: "My brother ___ (not / play) football right now.", a: "is not playing" },
+            { s: "___ (she / know) the answer?", a: "Does she know" },
+            { s: "They ___ (visit) their grandma this weekend.", a: "are visiting" },
+            { s: "Water ___ (boil) at 100 degrees Celsius.", a: "boils" },
+            { s: "I ___ (think) this is a bad idea.", a: "think" },
+            { s: "What ___ (you / do) tomorrow evening?", a: "are you doing" },
+            { s: "He ___ (always / be) late! It's so annoying.", a: "is always being" }, // FIXED
+            { s: "Look at that man! He ___ (try) to open the car.", a: "is trying" },
+            { s: "How often ___ (you / travel)?", a: "do you travel" },
+            { s: "I ___ (not / understand) this grammar.", a: "don't understand" },
+            { s: "The train to Athens ___ (leave) at 5 PM.", a: "leaves" },
+            { s: "She ___ (have) a big party for her birthday next week.", a: "is having" },
+            { s: "My parents ___ (live) in a small apartment.", a: "live" },
+            { s: "Be quiet! I ___ (try) to study.", a: "am trying" },
+            { s: "This soup ___ (taste) delicious!", a: "tastes" },
+            { s: "The chef ___ (taste) the soup right now.", a: "is tasting" },
+        ];
+
+        // --- Team Game 2 (Galaxy Gamble) ---
+        let teamAName = "Cosmic Comets";
+        let teamBName = "Space Invaders";
+        let teamAScore = 0;
+        let teamBScore = 0;
+        let currentTeam2 = 'A'; // 'A' or 'B'
+        let teamGame2Questions = [];
+        let teamGame2CurrentQ = 0;
+        let diceDeck = []; // TASK 2: Create a dice deck
+        
+        // TASK 2: Define the dice rolls outside the function
+        const diceMessages = [
+            { face: '💥', points: -10, text: 'Oh no! Black hole! -10 points!' },
+            { face: '⭐', points: 5, text: 'Nice! A star! +5 points!' },
+            { face: '🚀', points: 10, text: 'Great! Rocket boost! +10 points!' },
+            { face: '🪐', points: 15, text: 'Wow! New Planet! +15 points!' },
+            { face: '🛸', points: 20, text: 'Amazing! Alien friends! +20 points!' },
+            { face: '🔄', points: 0, text: 'Event! Swapping scores!', event: 'swap' } 
+        ];
+
+        // s: sentence, a: answer (can be an array for fill-in-gap), o: options (for choice), t: type ('fill' or 'choice')
+        const teamGame2AllQuestions = [
+            { t: 'fill', s: "I can't talk now, I ___ (do) my homework.", a: "am doing" },
+            { t: 'choice', s: "My dad ___ (go) to work by car every day.", o: ["goes", "is going"], a: "goes" },
+            { t: 'fill', s: "___ (they / speak) English?", a: "Do they speak" },
+            { t: 'choice', s: "We ___ (have) a party next Saturday.", o: ["have", "are having"], a: "are having" },
+            { t: 'fill', s: "He ___ (not / believe) in ghosts.", a: "doesn't believe" },
+            { t: 'choice', s: "My sister ___ (always / sing) in the shower. It's annoying!", o: ["always sings", "is always singing"], a: "is always singing" },
+            { t: 'fill', s: "What time ___ (the film / start) tonight?", a: "does the film start" },
+            { t: 'choice', s: "___ (like) this pasta?", o: ["Do you like", "Are you liking"], a: "Do you like" },
+            { t: 'fill', s: "Look! It ___ (snow)!", a: "is snowing" },
+            { t: 'choice', s: "I ___ (see) what you mean.", o: ["see", "am seeing"], a: "see" },
+            { t: 'fill', s: "I ___ (see) the dentist tomorrow at 10 AM.", a: "am seeing" },
+            { t: 'choice', s: "He ___ (have) two brothers and a sister.", o: ["has", "is having"], a: "has" },
+            { t: 'fill', s: "Sarah ___ (not / work) on Fridays.", a: "doesn't work" },
+            { t: 'choice', s: "Please be quiet, I ___ (think).", o: ["think", "am thinking"], a: "am thinking" }, // FIXED
+            { t: 'fill', s: "How many languages ___ (you / speak)?", a: "do you speak" },
+            { t: 'choice', s: "This flower ___ (smell) nice.", o: ["smells", "is smelling"], a: "smells" }, // FIXED
+            { t: 'fill', s: "Why ___ (the baby / cry)? Is it hungry?", a: "is the baby crying" },
+            // MOVED QUESTIONS
+            { t: 'choice', s: "Which sentence is correct?", o: ["I am needing help.", "I need help."], a: "I need help." },
+            { t: 'choice', s: "Which sentence is correct?", o: ["He is owning a big house.", "He owns a big house."], a: "He owns a big house." },
+            { t: 'choice', s: "Which sentence is correct?", o: ["She is seeming tired.", "She seems tired."], a: "She seems tired." },
+            { t: 'choice', s: "Which sentence is correct?", o: ["We are loving this game!", "We love this game!"], a: "We love this game!" }
+        ];
+
+        // --- Individual Game (Buzzer Beater) ---
+        let players = []; // { name: 'Student', score: 0 }
+        let indivCurrentPlayerIndex = 0;
+        let game3MasterList = [];
+        let game3CurrentRound = 0;
+        let currentIndivQuestion = {};
+        let buzzerCountdownInterval = null; // NEW
+        let answerCountdownInterval = null; // NEW
+        
+        // 30 Questions - UPDATED WITH VERBS
+        const game3Questions = [
+            { type: 'fill', s: "She ___ (not / know) him.", a: "doesn't know" },
+            { type: 'choice', s: "What ___ at the moment? (do)", options: ["do you do", "are you doing"], a: "are you doing" },
+            { type: 'choice', s: "My sister ___ to music now. (listen)", options: ["listens", "is listening"], a: "is listening" },
+            { type: 'choice', s: "___ this lesson? (understand)", options: ["Do you understand", "Are you understanding"], a: "Do you understand" },
+            { type: 'choice', s: "We ___ to the cinema tonight. We have tickets. (go)", options: ["go", "are going"], a: "are going" },
+            { type: 'choice', s: "I ___ you are wrong. (think)", options: ["am thinking", "think"], a: "think" },
+            { type: 'fill', s: "He ___ (study) for his test right now.", a: "is studying" },
+            { type: 'fill', s: "My lessons ___ (start) at 9:00 AM.", a: "starts" }, // TASK 4: FIX
+            { type: 'fill', s: "She ___ (be) never on time.", a: "is never" },
+            { type: 'fill', s: "___ (he / sleep) now?", a: "Is he sleeping" },
+            { type: 'choice', s: "I ___ my keys! I can't find them! (lose)", options: ["am always losing", "always lose"], a: "am always losing" },
+            { type: 'fill', s: "How often ___ (you / go) to the gym?", a: "do you go" },
+            { type: 'fill', s: "Be careful! The car ___ (come)!", a: "is coming" },
+            { type: 'choice', s: "This coffee ___ strange. (taste)", options: ["tastes", "is tasting"], a: "tastes" },
+            { type: 'fill', s: "My mother ___ (cook) dinner tonight.", a: "is cooking" },
+            { type: 'choice', s: "The boy ___ the soup to see if it's hot. (taste)", options: ["tastes", "is tasting"], a: "is tasting" },
+            // REPLACEMENT QUESTIONS
+            { type: 'fill', s: "___ (you / like) pizza?", a: "Do you like" },
+            { type: 'fill', s: "They ___ (not / play) football on Sundays.", a: "don't play" },
+            { type: 'choice', s: "He ___ (be) very naughty this week.", options: ["is", "is being"], a: "is being" },
+            { type: 'choice', s: "She ___ (look) tired today.", options: ["looks", "is looking"], a: "looks" },
+            // NEW 10 QUESTIONS
+            { type: 'fill', s: "She ___ (have) two cats.", a: "has" },
+            { type: 'choice', s: "They ___ a film now. (watch)", options: ["watch", "are watching"], a: "are watching" },
+            { type: 'fill', s: "I ___ (not / want) to go.", a: "don't want" },
+            { type: 'choice', s: "The bus ___ at 6 PM. (leave)", options: ["leaves", "is leaving"], a: "leaves" },
+            { type: 'fill', s: "He ___ (be) very kind.", a: "is" },
+            { type: 'choice', s: "Why ___ at me like that? (look)", options: ["do you look", "are you looking"], a: "are you looking" },
+            { type: 'fill', s: "She ___ (look) beautiful in that dress.", a: "looks" },
+            { type: 'fill', s: "We ___ (not / study) every night.", a: "don't study" },
+            { type: 'choice', s: "My head ___. (hurt)", options: ["hurts", "is hurting"], a: "hurts" },
+            { type: 'fill', s: "The baby ___ (sleep) at the moment.", a: "is sleeping" }
+        ];
+
+        // 5 Random Events (REMOVED FROM GAME 3)
+        const game3Events = [
+            // { type: 'event', execute: () => { ... } },
+        ];
+
+        // === Navigation ===
+        function showScreen(screenId, slideNum = -1) {
+            // BUG FIX: Clear any running game 3 timers when leaving the screen
+            if (screenId !== 'screen-indiv-game' && screenId !== 'screen-result') {
+                clearInterval(buzzerCountdownInterval);
+                clearInterval(answerCountdownInterval);
+            }
+
+            // *** THE OLD BUGGY LOGIC ***
+            // document.querySelectorAll('.screen').forEach(s => {
+            //     if (s.id !== 'screen-result') { 
+            //          s.classList.remove('active');
+            //     }
+            // });
+            
+            // *** NEW SIMPLER LOGIC ***
+            // Hide all "main" screens. The result modal is NOT a "main" screen.
+            document.querySelectorAll('#screen-home, #screen-game-select, #screen-learn, #screen-team-game-1-setup, #screen-team-game-1, #screen-team-game-2-setup, #screen-team-game-2, #screen-indiv-game-setup, #screen-indiv-game').forEach(s => {
+                s.classList.remove('active');
+            });
+
+            
+            const screen = document.getElementById(screenId);
+            screen.classList.add('active');
+            
+            currentScreen = screenId;
+            
+            if (screenId === 'screen-learn') {
+                if (slideNum !== -1) {
+                    currentSlide = slideNum;
+                }
+                renderSlide(); 
+            }
+        }
+        
+        // === NEW Result Modal Logic ===
+        function showResult(title, text, nextFunc, type) {
+            try {
+                const titleEl = document.getElementById('result-title');
+                const panelEl = document.getElementById('result-panel');
+                
+                titleEl.innerText = title;
+                document.getElementById('result-text').innerText = text;
+                
+                // Remove old classes
+                panelEl.classList.remove('anim-shake');
+                titleEl.classList.remove('text-green-600', 'text-red-600', 'text-blue-600');
+
+                if (type === 'correct') {
+                    titleEl.classList.add('text-green-600');
+                    sfx.play('correct');
+                } else if (type === 'incorrect') {
+                    titleEl.classList.add('text-red-600');
+                    panelEl.classList.add('anim-shake');
+                    sfx.play('wrong');
+                } else { // 'event' or 'timeout'
+                    titleEl.classList.add('text-blue-600');
+                    if (type === 'timeout') {
+                        sfx.play('wrong'); // Use wrong sound for timeout
+                    } else {
+                        sfx.play('dice'); // Re-use dice sound for events
+                    }
+                }
+                
+                // Set the "Continue" button's action
+                nextGameFunction = nextFunc; 
+                
+                // Show the result screen
+                panelEl.classList.remove('anim-pop-in'); // remove to re-trigger
+                void panelEl.offsetWidth; // Trigger reflow
+                panelEl.classList.add('anim-pop-in'); // Add animation
+                
+                // *** THE FIX: DO NOT CALL showScreen(). JUST SHOW THE MODAL. ***
+                // showScreen('screen-result'); // <-- THIS WAS THE BUG
+                document.getElementById('screen-result').classList.add('active'); // <-- THIS IS THE FIX
+
+            } catch (error) {
+                console.error("Error in showResult:", error);
+                // Fallback in case modal fails
+                nextFunc();
+            }
+        }
+        
+        // === NEW Score Update Function ===
+        function updateScore(scoreElement, newScore) {
+            scoreElement.innerText = newScore;
+            scoreElement.classList.remove('anim-pop-score');
+            void scoreElement.offsetWidth; // Trigger reflow
+            scoreElement.classList.add('anim-pop-score');
+        }
+        
+        // === Learning Zone Logic ===
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 0 && newSlide < slides.length) {
+                currentSlide = newSlide;
+                renderSlide();
+            }
+        }
+        
+        // === Team Game 1 (Tense Tussle) Logic ===
+        function startTeamGame() {
+            team1Name = document.getElementById('team1-name').value || "Red Rockets";
+            team2Name = document.getElementById('team2-name').value || "Blue Bombers";
+            
+            document.getElementById('team1-score-name').innerText = team1Name;
+            document.getElementById('team2-score-name').innerText = team2Name;
+            
+            team1Score = 0;
+            team2Score = 0;
+            teamGame1CurrentQ = 0;
+            currentTeam = 1;
+            
+            // TASK 6: Limit to 10 rounds
+            teamGame1Questions = [...teamGame1AllQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+            
+            document.getElementById('team1-score').innerText = team1Score;
+            document.getElementById('team2-score').innerText = team2Score;
+            
+            document.getElementById('team-question-container').style.display = 'block';
+            document.getElementById('team-game-over').style.display = 'none';
+
+            showScreen('screen-team-game-1');
+            displayTeamQuestion();
+        }
+        
+        function updateTeamTurnIndicator() {
+            const indicator = document.getElementById('team-turn-text');
+            if (currentTeam === 1) {
+                indicator.innerText = `It's ${team1Name}'s turn!`;
+                indicator.className = "text-5xl font-bold p-4 rounded-xl bg-red-200 text-red-700 border-4 border-black";
+            } else {
+                indicator.innerText = `It's ${team2Name}'s turn!`;
+                indicator.className = "text-5xl font-bold p-4 rounded-xl bg-blue-200 text-blue-700 border-4 border-black";
+            }
+        }
+        
+        function displayTeamQuestion() {
+            // TASK 7: Update round counter
+            document.getElementById('team-game-1-round-text').innerText = `Round ${teamGame1CurrentQ + 1} / ${teamGame1Questions.length}`;
+            
+            if (teamGame1CurrentQ >= teamGame1Questions.length) {
+                endTeamGame();
+                return;
+            }
+            
+            const q = teamGame1Questions[teamGame1CurrentQ];
+            document.getElementById('team-question-text').innerText = q.s;
+            document.getElementById('team-answer-input').value = '';
+            document.getElementById('team-answer-input').focus();
+            updateTeamTurnIndicator();
+        }
+        
+        // BUG FIX: Added try...catch block
+        function checkTeamAnswer() {
+            try {
+                if (teamGame1CurrentQ >= teamGame1Questions.length) return; // Prevent extra checks
+                const answer = normalizeAnswer(document.getElementById('team-answer-input').value);
+                const correctAnswer = normalizeAnswer(teamGame1Questions[teamGame1CurrentQ].a);
+                
+                if (answer === correctAnswer) {
+                    if (currentTeam === 1) {
+                        team1Score += 10;
+                        updateScore(document.getElementById('team1-score'), team1Score);
+                    } else {
+                        team2Score += 10;
+                        updateScore(document.getElementById('team2-score'), team2Score);
+                    }
+                    showResult('✅ KPOW!', '+10 points!', nextTeamQuestion, 'correct');
+                } else {
+                    showResult('❌ OOF!', `The answer was: ${correctAnswer}`, nextTeamQuestion, 'incorrect');
+                }
+            } catch (e) {
+                console.error("Error in checkTeamAnswer:", e);
+                // Fallback to ensure game continues
+                showResult('ERROR', 'An error occurred. Moving to next question.', nextTeamQuestion, 'incorrect');
+            }
+        }
+        
+        function nextTeamQuestion() {
+            // This function is called AFTER the result modal
+            currentTeam = (currentTeam === 1) ? 2 : 1;
+            teamGame1CurrentQ++;
+            // showScreen('screen-team-game-1'); // This line is no longer needed, game screen is already visible
+            displayTeamQuestion(); // Show next question or end game
+        }
+        
+        function endTeamGame() {
+            document.getElementById('team-question-container').style.display = 'none';
+            document.getElementById('team-game-over').style.display = 'block';
+            
+            let winnerText = "";
+            if (team1Score > team2Score) {
+                winnerText = `🏆 ${team1Name} wins! 🏆`;
+            } else if (team2Score > team1Score) {
+                winnerText = `🏆 ${team2Name} wins! 🏆`;
+            } else {
+                winnerText = "It's a draw!";
+            }
+            document.getElementById('team-winner-text').innerText = winnerText;
+        }
+
+        // === Team Game 2 (Galaxy Gamble) Logic ===
+        function startTeamGame2() {
+            teamAName = document.getElementById('teamA-name').value || "Cosmic Comets";
+            teamBName = document.getElementById('teamB-name').value || "Space Invaders";
+            
+            document.getElementById('teamA-score-name').innerText = teamAName;
+            document.getElementById('teamB-score-name').innerText = teamBName;
+            
+            teamAScore = 0;
+            teamBScore = 0;
+            teamGame2CurrentQ = 0;
+            currentTeam2 = 'A';
+            
+            // TASK 3: Limit to 15 rounds
+            teamGame2Questions = [...teamGame2AllQuestions].sort(() => 0.5 - Math.random()).slice(0, 15);
+            
+            // TASK 2: Create a "dice deck" for 15 rounds
+            diceDeck = [];
+            // Add ONE swap event, guaranteed
+            diceDeck.push({ face: '🔄', points: 0, text: 'Event! Swapping scores!', event: 'swap' });
+            // Add ONE -10 event, guaranteed
+            diceDeck.push({ face: '💥', points: -10, text: 'Oh no! Black hole! -10 points!' });
+            // Fill the rest (13) with other good/neutral rolls
+            const otherRolls = [
+                { face: '⭐', points: 5, text: 'Nice! A star! +5 points!' },
+                { face: '🚀', points: 10, text: 'Great! Rocket boost! +10 points!' },
+                { face: '🪐', points: 15, text: 'Wow! New Planet! +15 points!' },
+                { face: '🛸', points: 20, text: 'Amazing! Alien friends! +20 points!' },
+                { face: '🚀', points: 10, text: 'Great! Rocket boost! +10 points!' }, // Add more variety
+                { face: '⭐', points: 5, text: 'Nice! A star! +5 points!' }
+            ];
+            for (let i = 0; i < 13; i++) {
+                diceDeck.push(otherRolls[i % otherRolls.length]); // Cycle through the good rolls
+            }
+            // Shuffle the deck
+            diceDeck = diceDeck.sort(() => 0.5 - Math.random());
+            
+            document.getElementById('teamA-score').innerText = teamAScore;
+            document.getElementById('teamB-score').innerText = teamBScore;
+            
+            document.getElementById('team-question-container-2').style.display = 'block';
+            document.getElementById('dice-modal').style.display = 'none';
+            document.getElementById('team-game-over-2').style.display = 'none';
+            
+            showScreen('screen-team-game-2');
+            displayTeamQuestion2();
+        }
+
+        function updateTeamTurnIndicator2() {
+            const indicator = document.getElementById('team-turn-text-2');
+            if (currentTeam2 === 'A') {
+                indicator.innerText = `It's ${teamAName}'s turn!`;
+                indicator.className = "text-5xl font-bold p-4 rounded-xl bg-cyan-200 text-cyan-700 border-4 border-black";
+            } else {
+                indicator.innerText = `It's ${teamBName}'s turn!`;
+                indicator.className = "text-5xl font-bold p-4 rounded-xl bg-orange-200 text-orange-700 border-4 border-black";
+            }
+        }
+
+        function displayTeamQuestion2() {
+            // TASK 3: Update round counter
+            document.getElementById('team-game-2-round-text').innerText = `Round ${teamGame2CurrentQ + 1} / ${teamGame2Questions.length}`;
+            
+            if (teamGame2CurrentQ >= teamGame2Questions.length) {
+                endTeamGame2();
+                return;
+            }
+
+            // Hide dice, show question
+            document.getElementById('team-question-container-2').style.display = 'block';
+            document.getElementById('dice-modal').style.display = 'none';
+            document.getElementById('roll-dice-btn').disabled = false;
+            document.getElementById('dice-face').innerText = '🎲';
+            document.getElementById('dice-face').classList.remove('rolling');
+
+            const q = teamGame2Questions[teamGame2CurrentQ];
+            const qText = document.getElementById('team-question-text-2');
+            const optionsContainer = document.getElementById('team-options-container-2');
+            const answerInput = document.getElementById('team-answer-input-2');
+            const checkBtn = document.querySelector('#team-question-container-2 button');
+            
+            qText.innerText = q.s;
+            optionsContainer.innerHTML = '';
+            answerInput.value = '';
+            
+            if (q.t === 'fill') {
+                answerInput.style.display = 'block';
+                checkBtn.style.display = 'block';
+                answerInput.placeholder = 'Type the verb...';
+                answerInput.focus();
+            } else { // 'choice'
+                answerInput.style.display = 'none';
+                checkBtn.style.display = 'none';
+                q.o.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.innerText = opt;
+                    btn.className = 'w-full comic-btn-outlined text-2xl'; // NEW Comic Button
+                    btn.type = 'button'; // Set type
+                    btn.onclick = () => checkTeamAnswer2(opt);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+            
+            updateTeamTurnIndicator2();
+        }
+
+        // BUG FIX: Added try...catch block
+        function checkTeamAnswer2(choice = null) {
+            try {
+                if (teamGame2CurrentQ >= teamGame2Questions.length) return; // Prevent extra checks
+                const q = teamGame2Questions[teamGame2CurrentQ];
+                let answer;
+                if (q.t === 'fill') {
+                    answer = normalizeAnswer(document.getElementById('team-answer-input-2').value);
+                } else {
+                    answer = normalizeAnswer(choice);
+                }
+                
+                const correctAnswer = normalizeAnswer(q.a);
+
+                if (answer === correctAnswer) {
+                    // Correct! Show result modal, which will then call rollDice
+                    const teamName = currentTeam2 === 'A' ? teamAName : teamBName;
+                    showResult(`✅ ZING! Correct!`, `It's time for ${teamName} to roll the dice!`, rollDice, 'correct');
+                } else {
+                    // Incorrect
+                    showResult('❌ BZZT! Wrong!', `The answer was: ${correctAnswer}`, nextTeamQuestion2, 'incorrect');
+                }
+            } catch (e) {
+                console.error("Error in checkTeamAnswer2:", e);
+                // Fallback to ensure game continues
+                showResult('ERROR', 'An error occurred. Moving to next turn.', nextTeamQuestion2, 'incorrect');
+            }
+        }
+        
+        function rollDice() {
+            // This is now called from the result modal
+            // showScreen('screen-team-game-2'); // No need to call this, screen is already visible
+            document.getElementById('team-question-container-2').style.display = 'none';
+            document.getElementById('dice-modal').style.display = 'flex';
+            document.getElementById('dice-modal-text').innerText = `Roll the dice!`;
+        }
+
+        function performDiceRoll() {
+            sfx.play('dice');
+            document.getElementById('roll-dice-btn').disabled = true;
+            const diceFace = document.getElementById('dice-face');
+            diceFace.classList.add('rolling');
+            
+            // TASK 2: Dice messages are now global
+            
+            setTimeout(() => {
+                // TASK 2: Draw from the shuffled deck
+                const roll = diceDeck.pop() || { face: '⭐', points: 5, text: 'Nice! A star! +5 points!' }; // Fallback if deck is empty
+                
+                diceFace.classList.remove('rolling');
+                diceFace.innerText = roll.face;
+                
+                let message = roll.text; // Start with the default message
+
+                if (roll.event === 'swap') {
+                    const tempScore = teamAScore;
+                    teamAScore = teamBScore;
+                    teamBScore = tempScore;
+                    // Update scores in the background
+                    updateScore(document.getElementById('teamA-score'), teamAScore);
+                    updateScore(document.getElementById('teamB-score'), teamBScore);
+                    message = `😵 WHA?! ${teamAName} and ${teamBName} just swapped scores!`;
+                } else {
+                    // This is a normal point roll
+                    if (currentTeam2 === 'A') {
+                        teamAScore = Math.max(0, teamAScore + roll.points);
+                        updateScore(document.getElementById('teamA-score'), teamAScore);
+                    } else {
+                        teamBScore = Math.max(0, teamBScore + roll.points);
+                        updateScore(document.getElementById('teamB-score'), teamBScore);
+                    }
+                }
+                
+                // Show result modal, which then calls nextTeamQuestion2
+                showResult(roll.face, message, nextTeamQuestion2, 'event');
+
+            }, 1000); // Duration of the roll animation
+        }
+        
+        function nextTeamQuestion2() {
+            // This is called from the result modal (after answer or after dice roll)
+            currentTeam2 = (currentTeam2 === 'A') ? 'B' : 'A';
+            teamGame2CurrentQ++;
+            // showScreen('screen-team-game-2'); // No need to call this
+            displayTeamQuestion2();
+        }
+
+        function endTeamGame2() {
+            document.getElementById('team-question-container-2').style.display = 'none';
+            document.getElementById('dice-modal').style.display = 'none';
+            document.getElementById('team-game-over-2').style.display = 'block';
+            
+            let winnerText = "";
+            if (teamAScore > teamBScore) {
+                winnerText = `🏆 ${teamAName} wins! 🏆`;
+            } else if (teamBScore > teamAScore) {
+                winnerText = `🏆 ${teamBName} wins! 🏆`;
+            } else {
+                winnerText = "It's a draw!";
+            }
+            document.getElementById('team-winner-text-2').innerText = winnerText;
+        }
+
+        
+        // === Individual Game (Buzzer Beater) Logic ===
+        function addPlayer() {
+            if (players.length >= 12) {
+                showToast("Maximum of 12 players reached!");
+                return;
+            }
+            const input = document.getElementById('player-name-input');
+            const name = input.value.trim();
+            if (name) {
+                players.push({ name: name, score: 0 });
+                input.value = '';
+                renderPlayerList();
+                document.getElementById('start-indiv-game-btn').disabled = false;
+            }
+            // Keep focus on the input to add more players
+            input.focus();
+        }
+        
+        function renderPlayerList() {
+            const list = document.getElementById('player-list');
+            list.innerHTML = '';
+            players.forEach((player, index) => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-item';
+                // BUG FIX: Added type="button" to prevent form submission
+                playerEl.innerHTML = `
+                    <span class="text-lg font-medium text-gray-700 text-body">${player.name}</span>
+                    <button type="button" class="text-red-500 hover:text-red-700 font-bold text-2xl" onclick="sfx.play('click'); removePlayer(${index})">&times;</button>
+                `;
+                list.appendChild(playerEl);
+            });
+        }
+        
+        function removePlayer(index) {
+            players.splice(index, 1);
+            renderPlayerList();
+            if (players.length === 0) {
+                document.getElementById('start-indiv-game-btn').disabled = true;
+            }
+        }
+        
+        function startIndividualGame() {
+            if (players.length === 0) return;
+            
+            game3CurrentRound = 0;
+            players.forEach(p => p.score = 0);
+            // NEW: Game 3 now ONLY has questions
+            game3MasterList = [...game3Questions].sort(() => 0.5 - Math.random()); // Shuffle
+            
+            document.getElementById('indiv-game-over').style.display = 'none';
+            
+            showScreen('screen-indiv-game');
+            nextRound();
+        }
+        
+        function updateLeaderboard() {
+            try {
+                const board = document.getElementById('leaderboard');
+                board.innerHTML = '';
+                // Sort players by score, descending
+                const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+                
+                sortedPlayers.forEach(player => {
+                    const item = document.createElement('div');
+                    item.className = `flex justify-between items-center p-3 rounded-lg bg-white shadow-md border-2 border-black`;
+                    item.innerHTML = `
+                        <span class="text-xl font-bold text-body text-gray-700">${player.name}</span>
+                        <span class="text-2xl font-bold text-blue-600" style="font-family: 'Fredoka One', cursive;">${player.score}</span>
+                    `;
+                    board.appendChild(item);
+                });
+            } catch(e) {
+                console.error("Error updating leaderboard:", e);
+            }
+        }
+        
+        function nextRound() {
+            // Clear any active timers
+            clearInterval(buzzerCountdownInterval);
+            clearInterval(answerCountdownInterval);
+            
+            // showScreen('screen-indiv-game'); // No need to call this
+            
+            if (game3CurrentRound >= game3MasterList.length) {
+                endIndividualGame();
+                return;
+            }
+            
+            const round = game3MasterList[game3CurrentRound];
+            game3CurrentRound++;
+            
+            updateLeaderboard();
+
+            // Reset all UI parts
+            document.getElementById('indiv-question-text').style.display = 'none';
+            // document.getElementById('buzzer-countdown-area').style.display = 'none'; // <-- THIS WAS THE ERROR
+            document.getElementById('buzzer-area').style.display = 'none';
+            document.getElementById('who-buzzed-area').style.display = 'none';
+            document.getElementById('indiv-answer-container').style.display = 'none';
+            document.getElementById('indiv-answer-area').innerHTML = '';
+            document.getElementById('indiv-round-text').innerText = `Round ${game3CurrentRound} of ${game3MasterList.length}`;
+            
+            // NEW: No more 'event' type here
+            // It's a question
+            currentIndivQuestion = round;
+            document.getElementById('indiv-question-text').innerText = round.s;
+            
+            document.getElementById('indiv-question-text').style.display = 'block';
+            // startBuzzerCountdown(); // REMOVED
+            document.getElementById('buzzer-area').style.display = 'block'; // SHOW BUZZER IMMEDIATELY
+        }
+        
+        /* REMOVED COUNTDOWN FUNCTION
+        function startBuzzerCountdown() { ... }
+        */
+        
+        function onBuzzIn() {
+            // sfx.play('click'); // Play a click, not the main buzz
+            sfx.play('buzz'); // NEW: Play the "buzz" sound on click
+            document.getElementById('buzzer-area').style.display = 'none';
+            
+            const container = document.getElementById('who-buzzed-list');
+            container.innerHTML = ''; // Clear old list
+            players.forEach((player, index) => {
+                const btn = document.createElement('button');
+                btn.innerText = player.name;
+                btn.className = 'w-full comic-btn-outlined text-2xl';
+                btn.type = 'button'; // Set type
+                btn.onclick = () => { sfx.play('click'); onPlayerSelect(index); };
+                container.appendChild(btn);
+            });
+            
+            document.getElementById('who-buzzed-area').style.display = 'block';
+        }
+        
+        function onPlayerSelect(index) {
+            indivCurrentPlayerIndex = index;
+            document.getElementById('who-buzzed-area').style.display = 'none';
+            document.getElementById('indiv-round-text').innerText = `It's ${players[index].name}'s turn!`;
+            
+            // Render the answer area
+            const q = currentIndivQuestion;
+            const answerArea = document.getElementById('indiv-answer-area');
+            const checkBtn = document.getElementById('check-indiv-answer-btn');
+            answerArea.innerHTML = ''; // Clear
+            
+            if (q.type === 'fill') {
+                answerArea.innerHTML = `
+                    <input type="text" id="indiv-answer-input" class="comic-input" placeholder="Type the verb...">
+                `;
+                checkBtn.style.display = 'block';
+                setTimeout(() => document.getElementById('indiv-answer-input').focus(), 100);
+            } else { // 'choice' or 'stative'
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'space-y-3';
+                q.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.innerText = opt;
+                    btn.className = 'w-full comic-btn-outlined text-2xl text-left p-4';
+                    btn.type = 'button'; // Set type
+                    btn.onclick = () => checkIndivAnswer(opt);
+                    optionsContainer.appendChild(btn);
+                });
+                answerArea.appendChild(optionsContainer);
+                checkBtn.style.display = 'none';
+            }
+            
+            document.getElementById('indiv-answer-container').style.display = 'block';
+            startAnswerCountdown(); // NEW
+        }
+        
+        function startAnswerCountdown() {
+            let timer = 10;
+            const timerEl = document.getElementById('answer-countdown-timer');
+            timerEl.innerText = timer;
+            
+            clearInterval(answerCountdownInterval); // Clear any old one
+            answerCountdownInterval = setInterval(() => {
+                timer--;
+                timerEl.innerText = timer;
+                
+                if (timer <= 3 && timer > 0) {
+                    sfx.play('countdown'); // Beep on last 3 seconds
+                }
+                
+                if (timer === 0) {
+                    clearInterval(answerCountdownInterval);
+                    handleAnswerTimeout();
+                }
+            }, 1000);
+        }
+        
+        // NEW: Weighted random point generator for Game 3
+        function calculateRandomPoints() {
+            const r = Math.random();
+            if (r > 0.995) { // 0.5% chance
+                return 1000; // The JACKPOT!
+            }
+            if (r > 0.95) { // 4.5% chance
+                return Math.floor(Math.random() * 201) + 600; // 600-800
+            }
+            if (r > 0.75) { // 20% chance
+                return Math.floor(Math.random() * 201) + 300; // 300-500
+            }
+            // 75% chance
+            return Math.floor(Math.random() * 151) + 100; // 100-250
+        }
+        
+        // NEW: Random penalty
+        function calculateRandomPenalty() {
+            return Math.floor(Math.random() * 51) + 50; // 50-100
+        }
+
+        function handleAnswerTimeout() {
+            try {
+                if (game3CurrentRound > game3MasterList.length) return; // Prevent errors
+                const currentPlayer = players[indivCurrentPlayerIndex];
+                const penalty = calculateRandomPenalty();
+                currentPlayer.score = Math.max(0, currentPlayer.score - penalty); // Lose 50-100, min 0
+                updateLeaderboard();
+                showResult('⏰ TIME UP! ⏰', `-${penalty} points for ${currentPlayer.name}! The answer was: ${currentIndivQuestion.a}`, nextRound, 'timeout');
+            } catch(e) {
+                console.error("Error in handleAnswerTimeout:", e);
+                showResult('ERROR', 'An error occurred. Moving to next round.', nextRound, 'incorrect');
+            }
+        }
+
+        function checkIndivAnswer(choice = null) {
+            try {
+                if (game3CurrentRound > game3MasterList.length) return; // Prevent errors
+                clearInterval(answerCountdownInterval); // Stop the timer!
+                
+                const q = currentIndivQuestion;
+                let answer;
+                
+                if (q.type === 'fill') {
+                    const inputEl = document.getElementById('indiv-answer-input');
+                    if (inputEl) {
+                        answer = normalizeAnswer(inputEl.value);
+                    }
+                } else {
+                    answer = normalizeAnswer(choice);
+                }
+                
+                const correctAnswer = normalizeAnswer(q.a);
+                const currentPlayer = players[indivCurrentPlayerIndex];
+                
+                if (answer === correctAnswer) {
+                    const points = calculateRandomPoints(); // NEW
+                    currentPlayer.score += points;
+                    showResult(`✅ Correct, ${currentPlayer.name}!`, `+${points} points!`, nextRound, 'correct');
+                } else {
+                    const penalty = calculateRandomPenalty(); // NEW
+                    currentPlayer.score = Math.max(0, currentPlayer.score - penalty); // Lose 50-100, min 0
+                    showResult(`❌ Wrong, ${currentPlayer.name}!`, `-${penalty} points! The answer was: ${q.a}`, nextRound, 'incorrect');
+                }
+                updateLeaderboard();
+            } catch (e) {
+                console.error("Error in checkIndivAnswer:", e);
+                showResult('ERROR', 'An error occurred. Moving to next round.', nextRound, 'incorrect');
+            }
+        }
+        
+        function endIndividualGame() {
+            document.getElementById('indiv-question-text').style.display = 'none';
+            document.getElementById('buzzer-area').style.display = 'none';
+            document.getElementById('who-buzzed-area').style.display = 'none';
+            document.getElementById('indiv-answer-container').style.display = 'none';
+            document.getElementById('indiv-game-over').style.display = 'block';
+            
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            const winner = sortedPlayers[0] || { name: 'Nobody', score: 0 };
+            
+            document.getElementById('indiv-winner-text').innerText = `🏆 ${winner.name} wins with ${winner.score} points! 🏆`;
+            updateLeaderboard(); // Show final scores
+        }
+        
+        // === Utility Functions ===
+        function normalizeAnswer(str) {
+            if (typeof str !== 'string') return '';
+            return str.trim().toLowerCase().replace(/[.!?]/g, ''); // Remove punctuation
+        }
+        
+        function showToast(message) { // Only for errors now
+            const toast = document.getElementById('message-toast');
+            toast.innerText = message;
+            toast.className = 'toast-snackbar bg-red-600';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+        
+        // === Initial Setup ===
+        window.onload = () => {
+            showScreen('screen-home');
+            
+            // Result modal "continue" button
+            document.getElementById('result-continue-btn').onclick = () => {
+                sfx.play('click');
+                // *** THE FIX: HIDE THE MODAL *BEFORE* CALLING THE NEXT FUNCTION ***
+                document.getElementById('screen-result').classList.remove('active');
+                nextGameFunction();
+            };
+            
+            // === BUG FIX: Add e.preventDefault() to all 'Enter' key listeners ===
+            // This stops the whole page from reloading
+            document.getElementById('team-answer-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    checkTeamAnswer();
+                }
+            });
+            document.getElementById('team-answer-input-2').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    checkTeamAnswer2();
+                }
+            });
+            document.getElementById('player-name-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sfx.play('click'); 
+                    addPlayer(); 
+                }
+            });
+
+             document.addEventListener('keypress', (e) => {
+                if (currentScreen === 'screen-indiv-game' && e.key === 'Enter' && e.target.id === 'indiv-answer-input') {
+                    if (currentIndivQuestion.type === 'fill') {
+                        e.preventDefault(); 
+                        checkIndivAnswer();
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>
